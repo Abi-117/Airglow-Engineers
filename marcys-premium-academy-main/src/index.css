@@ -1,0 +1,193 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Premium White Theme for Airglow Engineers */
+    --background: 30 20% 98%;
+    --background-secondary: 30 15% 95%;
+    --background-tertiary: 30 10% 92%;
+    --foreground: 0 0% 8%;
+    
+    /* Brand colors */
+    --brand-red: 0 78% 50%;
+    --brand-blue: 215 70% 45%;
+    --brand-brown: 25 50% 35%;
+    --brand-orange: 20 90% 52%;
+    
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 8%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 8%;
+    
+    --primary: 0 78% 50%;
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 215 70% 45%;
+    --secondary-foreground: 0 0% 100%;
+    
+    --muted: 30 10% 92%;
+    --muted-foreground: 0 0% 40%;
+    
+    --accent: 25 50% 35%;
+    --accent-foreground: 0 0% 100%;
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 30 10% 88%;
+    --input: 30 10% 88%;
+    --ring: 0 78% 50%;
+    
+    --radius: 0.5rem;
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 3px hsl(0 0% 0% / 0.06);
+    --shadow-md: 0 4px 20px hsl(0 0% 0% / 0.08);
+    --shadow-lg: 0 10px 40px hsl(0 0% 0% / 0.1);
+    --shadow-xl: 0 20px 60px hsl(0 0% 0% / 0.12);
+    
+    /* Sidebar */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 0 0% 8%;
+    --sidebar-primary: 0 78% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 30 10% 95%;
+    --sidebar-accent-foreground: 0 0% 8%;
+    --sidebar-border: 30 10% 88%;
+    --sidebar-ring: 0 78% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+}
+
+@layer components {
+  /* Brand text colors */
+  .text-brand-red {
+    color: hsl(var(--brand-red));
+  }
+  
+  .text-brand-blue {
+    color: hsl(var(--brand-blue));
+  }
+  
+  .text-brand-brown {
+    color: hsl(var(--brand-brown));
+  }
+  
+  .text-brand-orange {
+    color: hsl(var(--brand-orange));
+  }
+  
+  .bg-brand-red {
+    background-color: hsl(var(--brand-red));
+  }
+  
+  .bg-brand-blue {
+    background-color: hsl(var(--brand-blue));
+  }
+  
+  .bg-brand-brown {
+    background-color: hsl(var(--brand-brown));
+  }
+
+  /* Premium card styling */
+  .premium-card {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    box-shadow: var(--shadow-sm);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .premium-card:hover {
+    border-color: hsl(var(--brand-red) / 0.2);
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-4px);
+  }
+  
+  /* Shimmer effect */
+  .btn-shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .btn-shimmer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, hsl(0 0% 100% / 0.2), transparent);
+    transition: left 0.5s ease;
+  }
+  
+  .btn-shimmer:hover::before {
+    left: 100%;
+  }
+
+  /* Section backgrounds */
+  .section-light {
+    background: hsl(var(--background-secondary));
+  }
+
+  /* Underline animation */
+  .nav-underline {
+    position: relative;
+  }
+  
+  .nav-underline::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: hsl(var(--brand-red));
+    transition: width 0.3s ease;
+  }
+  
+  .nav-underline:hover::after {
+    width: 100%;
+  }
+
+  /* Brown divider */
+  .divider-brown {
+    height: 3px;
+    width: 60px;
+    background: hsl(var(--brand-brown));
+    border-radius: 2px;
+  }
+}
+
+@layer utilities {
+  .container-premium {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  
+  .text-balance {
+    text-wrap: balance;
+  }
+}
