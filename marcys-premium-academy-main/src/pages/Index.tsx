@@ -9,11 +9,8 @@ import HeroSlider from "@/components/HeroSlider";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import WhyChooseUs from "@/components/WhyChooseUs";
 import GoogleReviews from "@/components/GoogleReviews";
-import API from "../api"; // ✅ Use centralized axios
+import API from "../api";
 
-const BACKEND_URL = import.meta.env.VITE_API_URL;
-
-/* ================= TYPES ================= */
 interface Stat {
   value: string;
   label: string;
@@ -22,7 +19,7 @@ interface Stat {
 interface ServicePreview {
   title: string;
   description: string;
-  images?: string[];
+  images?: string[]; // Cloudinary URLs
 }
 
 interface HomeData {
@@ -36,7 +33,7 @@ interface HomeData {
   aboutTitle: string;
   aboutDescription: string;
   aboutPoints: string[];
-  aboutImage: string;
+  aboutImage: string; // Cloudinary URL
   servicesSectionTitle: string;
   services: ServicePreview[];
   mapEmbed: string;
@@ -47,14 +44,12 @@ const defaultHome: HomeData = {
   heroBadge: "Trusted Service",
   heroTitle: "Expert Home Appliance",
   heroSubtitle: "Repair Service",
-  heroDescription:
-    "Fast and reliable repair service for all major home appliances.",
+  heroDescription: "Fast and reliable repair service for all major home appliances.",
   whatsappNumber: "919999999999",
   phoneNumber: "919999999999",
   stats: [],
   aboutTitle: "We Provide Professional Service",
-  aboutDescription:
-    "We are experts in repairing all types of home appliances.",
+  aboutDescription: "We are experts in repairing all types of home appliances.",
   aboutPoints: [],
   aboutImage: "",
   servicesSectionTitle: "Our Services",
@@ -85,7 +80,7 @@ const ServiceCard = ({ service }: { service: ServicePreview }) => {
 
   const imageUrl =
     service.images && service.images.length > 0
-      ? `${BACKEND_URL}/uploads/${service.images[currentIndex]}`
+      ? service.images[currentIndex] // Cloudinary URL directly
       : "https://via.placeholder.com/400x300";
 
   return (
@@ -106,7 +101,7 @@ const ServiceCard = ({ service }: { service: ServicePreview }) => {
 
         <Link to="/contact">
           <Button size="sm" className="w-full">
-            Book Now
+            Book Now <ArrowRight className="w-5 h-5" />
           </Button>
         </Link>
       </div>
@@ -128,9 +123,7 @@ const Index = () => {
       });
   }, []);
 
-  const aboutImageUrl = home.aboutImage
-    ? `${BACKEND_URL}/uploads/${home.aboutImage}`
-    : "https://via.placeholder.com/600x400";
+  const aboutImageUrl = home.aboutImage || "https://via.placeholder.com/600x400";
 
   return (
     <div className="min-h-screen bg-background">
@@ -148,14 +141,10 @@ const Index = () => {
 
             <h1 className="text-3xl md:text-6xl font-bold text-white mb-5">
               {home.heroTitle}{" "}
-              <span className="text-brand-orange">
-                {home.heroSubtitle}
-              </span>
+              <span className="text-brand-orange">{home.heroSubtitle}</span>
             </h1>
 
-            <p className="text-lg text-white/80 mb-8">
-              {home.heroDescription}
-            </p>
+            <p className="text-lg text-white/80 mb-8">{home.heroDescription}</p>
 
             <div className="flex gap-3">
               <Link to="/contact">
@@ -185,9 +174,7 @@ const Index = () => {
                   <Icon className="w-6 h-6 text-brand-red" />
                 </div>
                 <div className="text-3xl font-bold">{stat.value}</div>
-                <div className="text-sm text-muted-foreground">
-                  {stat.label}
-                </div>
+                <div className="text-sm text-muted-foreground">{stat.label}</div>
               </div>
             );
           })}
@@ -198,22 +185,12 @@ const Index = () => {
       <section className="py-20">
         <div className="container-premium grid lg:grid-cols-2 gap-12 items-center">
           <div className="aspect-[4/3] rounded-2xl overflow-hidden shadow-xl">
-            <img
-              src={aboutImageUrl}
-              alt="About"
-              className="w-full h-full object-cover"
-            />
+            <img src={aboutImageUrl} alt="About" className="w-full h-full object-cover" />
           </div>
 
           <div>
-            <h2 className="text-3xl font-bold mb-4">
-              {home.aboutTitle}
-            </h2>
-
-            <p className="mb-6 text-muted-foreground">
-              {home.aboutDescription}
-            </p>
-
+            <h2 className="text-3xl font-bold mb-4">{home.aboutTitle}</h2>
+            <p className="mb-6 text-muted-foreground">{home.aboutDescription}</p>
             <div className="space-y-2">
               {home.aboutPoints?.map((point, i) => (
                 <div key={i} className="flex gap-2">

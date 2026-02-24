@@ -82,6 +82,7 @@ const AdminHome = () => {
       }
 
       setSaving(true);
+
       const formData = new FormData();
 
       formData.append("heroBadge", data.heroBadge);
@@ -135,7 +136,15 @@ const AdminHome = () => {
     setServiceFiles(serviceFiles.filter((_, i) => i !== index));
   };
 
-  if (loading) return <div className="flex min-h-screen"><AdminLayout /><div className="flex-1 flex items-center justify-center">Loading...</div></div>;
+  if (loading)
+    return (
+      <div className="flex min-h-screen">
+        <AdminLayout />
+        <div className="flex-1 flex items-center justify-center">
+          Loading...
+        </div>
+      </div>
+    );
 
   return (
     <div className="flex min-h-screen">
