@@ -1,14 +1,15 @@
+import { v2 as cloudinary } from "cloudinary";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
 import multer from "multer";
-import path from "path";
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, process.env.UPLOAD_PATH || path.join(process.cwd(), "uploads"));
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "airglow", // folder in Cloudinary
+    allowed_formats: ["jpg", "jpeg", "png"],
   },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
-  }
 });
 
 const upload = multer({ storage });
+
 export default upload;

@@ -14,7 +14,7 @@ interface Stat {
 interface Service {
   title: string;
   description: string;
-  images: string[];
+  images: string[]; // Cloudinary URLs
 }
 
 interface HomeData {
@@ -28,7 +28,7 @@ interface HomeData {
   aboutTitle: string;
   aboutDescription: string;
   aboutPoints: string[];
-  aboutImage: string;
+  aboutImage: string; // Cloudinary URL
   services: Service[];
   mapEmbed: string;
 }
@@ -55,10 +55,7 @@ const AdminHome = () => {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const BASE_URL =
-    import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
-
-  // ================= FETCH HOME DATA =================
+  /* ================= FETCH ================= */
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -76,16 +73,17 @@ const AdminHome = () => {
     fetchData();
   }, []);
 
-  // ================= SAVE HOME DATA =================
+  /* ================= SAVE ================= */
   const saveData = async () => {
-    if (!data.heroTitle || !data.aboutTitle) {
-      alert("Please fill required fields");
-      return;
-    }
-
-    setSaving(true);
     try {
+      if (!data.heroTitle || !data.aboutTitle) {
+        alert("Please fill required fields");
+        return;
+      }
+
+      setSaving(true);
       const formData = new FormData();
+
       formData.append("heroBadge", data.heroBadge);
       formData.append("heroTitle", data.heroTitle);
       formData.append("heroSubtitle", data.heroSubtitle);
@@ -101,24 +99,26 @@ const AdminHome = () => {
 
       if (aboutFile) formData.append("aboutImage", aboutFile);
 
-      serviceFiles.forEach((filesArray, idx) =>
-        filesArray.forEach((file) => formData.append(`serviceImages_${idx}`, file))
-      );
+      serviceFiles.forEach((files, idx) => {
+        files.forEach((file) => {
+          formData.append(`serviceImages_${idx}`, file);
+        });
+      });
 
       await API.put("/home", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      alert("Home updated successfully ✅");
-    } catch (err) {
-      console.error(err);
+      alert("Home Updated Successfully ✅");
+    } catch (error) {
+      console.error(error);
       alert("Error updating home ❌");
     } finally {
       setSaving(false);
     }
   };
 
-  // ================= ADD SERVICE =================
+  /* ================= ADD / DELETE SERVICE ================= */
   const addService = () => {
     setData({
       ...data,
@@ -127,23 +127,15 @@ const AdminHome = () => {
     setServiceFiles([...serviceFiles, []]);
   };
 
-  // ================= DELETE SERVICE =================
   const deleteService = (index: number) => {
-    const updatedServices = data.services.filter((_, i) => i !== index);
-    const updatedFiles = serviceFiles.filter((_, i) => i !== index);
-    setData({ ...data, services: updatedServices });
-    setServiceFiles(updatedFiles);
+    setData({
+      ...data,
+      services: data.services.filter((_, i) => i !== index),
+    });
+    setServiceFiles(serviceFiles.filter((_, i) => i !== index));
   };
 
-  if (loading)
-    return (
-      <div className="flex min-h-screen">
-        <AdminLayout />
-        <div className="flex-1 flex items-center justify-center">
-          Loading...
-        </div>
-      </div>
-    );
+  if (loading) return <div className="flex min-h-screen"><AdminLayout /><div className="flex-1 flex items-center justify-center">Loading...</div></div>;
 
   return (
     <div className="flex min-h-screen">
@@ -162,49 +154,21 @@ const AdminHome = () => {
           {/* HERO */}
           <div className="bg-white p-6 rounded-xl shadow space-y-4">
             <h2 className="font-semibold text-xl">Hero Section</h2>
-            <Input
-              placeholder="Badge"
-              value={data.heroBadge}
-              onChange={(e) => setData({ ...data, heroBadge: e.target.value })}
-            />
-            <Input
-              placeholder="Title"
-              value={data.heroTitle}
-              onChange={(e) => setData({ ...data, heroTitle: e.target.value })}
-            />
-            <Input
-              placeholder="Subtitle"
-              value={data.heroSubtitle}
-              onChange={(e) => setData({ ...data, heroSubtitle: e.target.value })}
-            />
-            <Textarea
-              placeholder="Description"
-              value={data.heroDescription}
-              onChange={(e) => setData({ ...data, heroDescription: e.target.value })}
-            />
+            <Input placeholder="Badge" value={data.heroBadge} onChange={e => setData({...data, heroBadge: e.target.value})} />
+            <Input placeholder="Title" value={data.heroTitle} onChange={e => setData({...data, heroTitle: e.target.value})} />
+            <Input placeholder="Subtitle" value={data.heroSubtitle} onChange={e => setData({...data, heroSubtitle: e.target.value})} />
+            <Textarea placeholder="Description" value={data.heroDescription} onChange={e => setData({...data, heroDescription: e.target.value})} />
           </div>
 
           {/* ABOUT */}
           <div className="bg-white p-6 rounded-xl shadow space-y-4">
             <h2 className="font-semibold text-xl">About Section</h2>
-            <Input
-              placeholder="About Title"
-              value={data.aboutTitle}
-              onChange={(e) => setData({ ...data, aboutTitle: e.target.value })}
-            />
-            <Textarea
-              placeholder="About Description"
-              value={data.aboutDescription}
-              onChange={(e) => setData({ ...data, aboutDescription: e.target.value })}
-            />
-            <input type="file" onChange={(e) => setAboutFile(e.target.files?.[0] || null)} />
+            <Input placeholder="About Title" value={data.aboutTitle} onChange={e => setData({...data, aboutTitle: e.target.value})} />
+            <Textarea placeholder="About Description" value={data.aboutDescription} onChange={e => setData({...data, aboutDescription: e.target.value})} />
+            <input type="file" onChange={e => setAboutFile(e.target.files?.[0] || null)} />
             {(aboutFile || data.aboutImage) && (
               <img
-                src={
-                  aboutFile
-                    ? URL.createObjectURL(aboutFile)
-                    : `${BASE_URL}/uploads/${data.aboutImage}`
-                }
+                src={aboutFile ? URL.createObjectURL(aboutFile) : data.aboutImage}
                 className="w-60 rounded mt-3"
               />
             )}
@@ -213,83 +177,45 @@ const AdminHome = () => {
           {/* SERVICES */}
           <div className="bg-white p-6 rounded-xl shadow space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="font-semibold text-xl">Services</h2>
-              <Button size="sm" onClick={addService}>
-                <Plus className="w-4 h-4 mr-1" /> Add
-              </Button>
+              <h2 className="font-semibold text-xl">Service Preview</h2>
+              <Button size="sm" onClick={addService}><Plus className="w-4 h-4 mr-1" /> Add</Button>
             </div>
 
-            {data.services.map((service, index) => (
-              <div key={index} className="border p-4 rounded-lg space-y-3">
-                <Input
-                  placeholder="Service Title"
-                  value={service.title}
-                  onChange={(e) => {
-                    const updated = [...data.services];
-                    updated[index].title = e.target.value;
-                    setData({ ...data, services: updated });
-                  }}
-                />
-                <Textarea
-                  placeholder="Service Description"
-                  value={service.description}
-                  onChange={(e) => {
-                    const updated = [...data.services];
-                    updated[index].description = e.target.value;
-                    setData({ ...data, services: updated });
-                  }}
-                />
+            {data.services.map((service, idx) => (
+              <div key={idx} className="border p-4 rounded-lg space-y-3">
+                <Input placeholder="Service Title" value={service.title} onChange={e => {
+                  const copy = [...data.services]; copy[idx].title = e.target.value; setData({...data, services: copy});
+                }} />
+                <Textarea placeholder="Service Description" value={service.description} onChange={e => {
+                  const copy = [...data.services]; copy[idx].description = e.target.value; setData({...data, services: copy});
+                }} />
 
-                <input
-                  type="file"
-                  multiple
-                  onChange={(e) => {
-                    const files = e.target.files ? Array.from(e.target.files) : [];
-                    const copy = [...serviceFiles];
-                    copy[index] = [...(copy[index] || []), ...files];
-                    setServiceFiles(copy);
-                  }}
-                />
+                <input type="file" multiple onChange={e => {
+                  const files = e.target.files ? Array.from(e.target.files) : [];
+                  const copy = [...serviceFiles]; copy[idx] = [...(copy[idx] || []), ...files]; setServiceFiles(copy);
+                }} />
 
                 <div className="flex flex-wrap gap-3">
-                  {/* Existing images */}
                   {service.images?.map((img, i) => (
-                    <div key={`existing-${i}`} className="relative">
-                      <img src={`${BASE_URL}/uploads/${img}`} className="w-32 h-20 object-cover rounded" />
-                      <button
-                        onClick={() => {
-                          const updated = [...data.services];
-                          updated[index].images = updated[index].images.filter((_, j) => j !== i);
-                          setData({ ...data, services: updated });
-                        }}
-                        className="absolute top-1 right-1 bg-red-500 text-white w-5 h-5 text-xs rounded-full"
-                      >
-                        ✕
-                      </button>
+                    <div key={i} className="relative">
+                      <img src={img} className="w-32 h-20 object-cover rounded" />
+                      <button type="button" onClick={() => {
+                        const copy = [...data.services]; copy[idx].images = copy[idx].images.filter((_, j) => j !== i); setData({...data, services: copy});
+                      }} className="absolute top-1 right-1 bg-red-500 text-white w-5 h-5 text-xs rounded-full">✕</button>
                     </div>
                   ))}
 
-                  {/* New images */}
-                  {serviceFiles[index]?.map((file, i) => (
+                  {serviceFiles[idx]?.map((file, i) => (
                     <div key={`new-${i}`} className="relative">
                       <img src={URL.createObjectURL(file)} className="w-32 h-20 object-cover rounded" />
-                      <button
-                        onClick={() => {
-                          const copy = [...serviceFiles];
-                          copy[index] = copy[index].filter((_, j) => j !== i);
-                          setServiceFiles(copy);
-                        }}
-                        className="absolute top-1 right-1 bg-red-500 text-white w-5 h-5 text-xs rounded-full"
-                      >
-                        ✕
-                      </button>
+                      <button type="button" onClick={() => {
+                        const copy = [...serviceFiles]; copy[idx] = copy[idx].filter((_, j) => j !== i); setServiceFiles(copy);
+                      }} className="absolute top-1 right-1 bg-red-500 text-white w-5 h-5 text-xs rounded-full">✕</button>
                     </div>
                   ))}
                 </div>
 
-                <Button variant="destructive" size="sm" onClick={() => deleteService(index)}>
-                  Delete Service
-                </Button>
+                <Button variant="destructive" size="sm" onClick={() => deleteService(idx)}>Delete Service</Button>
               </div>
             ))}
           </div>

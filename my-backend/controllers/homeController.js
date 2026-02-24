@@ -1,4 +1,13 @@
 import Home from "../models/Home.js";
+import { v2 as cloudinary } from "cloudinary";
+import fs from "fs";
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 export const getHome = async (req, res) => {
   try {
@@ -28,28 +37,32 @@ export const updateHome = async (req, res) => {
 
     let parsedServices = JSON.parse(services);
 
-    // Handle uploaded files
+    // Handle uploaded files via Cloudinary
     if (req.files && req.files.length > 0) {
-      req.files.forEach((file) => {
+      for (const file of req.files) {
+        // Upload to Cloudinary
+        const result = await cloudinary.uploader.upload(file.path, {
+          folder: "airglow",
+        });
 
-        // ABOUT IMAGE
+        // Remove local file after upload
+        fs.unlinkSync(file.path);
+
+        // About Image
         if (file.fieldname === "aboutImage") {
-          req.body.aboutImage = file.filename;
+          req.body.aboutImage = result.secure_url;
         }
 
-        // SERVICE IMAGES
+        // Service Images
         const match = file.fieldname.match(/serviceImages_(\d+)/);
-
         if (match) {
           const serviceIndex = parseInt(match[1]);
-
           if (!parsedServices[serviceIndex].images) {
             parsedServices[serviceIndex].images = [];
           }
-
-          parsedServices[serviceIndex].images.push(file.filename);
+          parsedServices[serviceIndex].images.push(result.secure_url);
         }
-      });
+      }
     }
 
     const updatedData = {
@@ -71,12 +84,8 @@ export const updateHome = async (req, res) => {
     await Home.findOneAndUpdate({}, updatedData, { upsert: true });
 
     res.json({ message: "Home updated successfully" });
-
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Update failed" });
   }
 };
-
-
-
