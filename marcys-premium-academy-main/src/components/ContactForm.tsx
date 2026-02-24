@@ -145,7 +145,7 @@ Description: ${formData.description || "N/A"}
       {formData.appliance && (
         <div>
           <label className="block text-sm font-medium mb-1">
-            Brand Name
+            Confirm Brand
           </label>
           <input
             type="text"
@@ -154,7 +154,7 @@ Description: ${formData.description || "N/A"}
             onChange={handleChange}
             required
             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500"
-            placeholder="Eg: LG, Samsung, Whirlpool..."
+            placeholder=""
           />
         </div>
       )}

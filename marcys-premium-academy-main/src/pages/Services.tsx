@@ -13,8 +13,10 @@ interface ServiceItem {
   title: string;
   description: string;
   type: "main" | "advanced";
-  images?: string[]; // ✅ multiple images
+  images?: string[];
 }
+
+const BACKEND_URL = import.meta.env.VITE_API_URL;
 
 const whatsappLink =
   "https://wa.me/919952006778?text=" +
@@ -32,7 +34,6 @@ const ServiceCard = ({
 }) => {
   const [imgIndex, setImgIndex] = useState(0);
 
-  // Auto image slider (3 sec)
   useEffect(() => {
     if (!images.length) return;
 
@@ -43,19 +44,25 @@ const ServiceCard = ({
     return () => clearInterval(interval);
   }, [images]);
 
+  const imageUrl =
+    images.length > 0
+      ? images[imgIndex].startsWith("http")
+        ? images[imgIndex]
+        : `${BACKEND_URL}${images[imgIndex]}`
+      : "https://via.placeholder.com/600x400";
+
   return (
     <div className="premium-card rounded-xl overflow-hidden shadow-lg mx-auto w-full max-w-4xl h-[65rem] flex flex-col bg-white">
 
-      {/* 🔥 IMAGE SECTION (TOP) */}
+      {/* IMAGE */}
       {images.length > 0 && (
         <div className="h-1/2 relative overflow-hidden">
           <img
-            src={`http://localhost:5000${images[imgIndex]}`}
+            src={imageUrl}
             alt={title}
             className="w-full h-full object-cover transition-all duration-700"
           />
 
-          {/* Dots Indicator */}
           {images.length > 1 && (
             <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
               {images.map((_, i) => (
@@ -71,28 +78,24 @@ const ServiceCard = ({
         </div>
       )}
 
-      {/* 🔥 CONTENT SECTION */}
-      {/* 🔥 CONTENT SECTION */}
-<div className="p-6 flex flex-col gap-4 h-1/2">
+      {/* CONTENT */}
+      <div className="p-6 flex flex-col gap-4 h-1/2">
+        <h3 className="font-display text-2xl font-bold text-center">
+          {title}
+        </h3>
 
-  <h3 className="font-display text-2xl font-bold text-center">
-    {title}
-  </h3>
+        <p className="text-muted-foreground text-base whitespace-pre-line leading-relaxed text-left overflow-y-auto max-h-96">
+          {description}
+        </p>
 
-  <p className="text-muted-foreground text-base whitespace-pre-line leading-relaxed text-left overflow-y-auto max-h-96">
-    {description}
-  </p>
-
-  <div className="mt-auto text-center">
-    <a href="/contact">
-      <Button variant="brand-outline" size="lg">
-        <Phone className="w-5 h-5 mr-2" /> Book Now
-      </Button>
-    </a>
-  </div>
-
-</div>
-
+        <div className="mt-auto text-center">
+          <a href="/contact">
+            <Button variant="brand-outline" size="lg">
+              <Phone className="w-5 h-5 mr-2" /> Book Now
+            </Button>
+          </a>
+        </div>
+      </div>
     </div>
   );
 };
@@ -129,7 +132,7 @@ const Services = () => {
     fetchServices();
   }, []);
 
-  if (loading) return <p className="p-6">Loading...</p>;
+  if (loading) return <p className="p-6 text-center">Loading...</p>;
 
   const nextMain = () =>
     setMainIndex((prev) => (prev + 1) % mainServices.length);

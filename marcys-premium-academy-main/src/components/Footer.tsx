@@ -2,6 +2,8 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Phone, Mail, MapPin, Instagram, Facebook, Twitter, MessageCircle } from 'lucide-react';
 import logo from '@/assets/wecare.png';
+import zenlogo from '@/assets/LOGO (2).png'
+
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -117,24 +119,43 @@ const Footer = () => {
 
         {/* Bottom Bar */}
         <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          viewport={{ once: true }}
-          className="mt-12 pt-8 border-t border-primary-foreground/10 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-primary-foreground/50"
-        >
-          <p>© {currentYear} Airglow Engineers. All rights reserved.</p>
-          <div className="flex items-center gap-6">
-            <Link to="/privacy" className="hover:text-brand-orange transition-colors">Privacy Policy</Link>
-            <span className="text-primary-foreground/20">|</span>
-            <span>
-              Powered by{' '}
-              <a href="https://zenelait.com" target="_blank" rel="noopener noreferrer" className="text-brand-orange hover:text-brand-orange/80 transition-colors">
-                Zenelait Info Tech
-              </a>
-            </span>
-          </div>
-        </motion.div>
+  initial={{ opacity: 0 }}
+  whileInView={{ opacity: 1 }}
+  transition={{ duration: 0.6, delay: 0.4 }}
+  viewport={{ once: true }}
+  className="mt-12 pt-8 border-t border-primary-foreground/10 
+             flex items-center justify-between 
+             text-sm text-primary-foreground/50"
+>
+  <p>© {currentYear} Airglow Engineers. All rights reserved.</p>
+
+  <div className="flex items-center gap-4">
+    <Link 
+      to="/privacy" 
+      className="hover:text-brand-orange transition-colors"
+    >
+      Privacy Policy
+    </Link>
+
+    <span className="text-primary-foreground/20">|</span>
+
+    <div className="flex items-center gap-2">
+      <span>Powered by</span>
+      <a
+        href="https://zenelaitinfotech.com"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center"
+      >
+        <img 
+          src={zenlogo} 
+          alt="Zenelait Info Tech" 
+          className="h-16 w-40 object-cover bg-white rounded-3xl"
+        />
+      </a>
+    </div>
+  </div>
+</motion.div>
       </div>
     </footer>
   );

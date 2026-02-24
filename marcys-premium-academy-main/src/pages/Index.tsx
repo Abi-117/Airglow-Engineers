@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import axios from "axios";
 import { ArrowRight, Phone, Shield, Clock, Award, Users } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -10,8 +9,9 @@ import HeroSlider from "@/components/HeroSlider";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import WhyChooseUs from "@/components/WhyChooseUs";
 import GoogleReviews from "@/components/GoogleReviews";
+import API from "../api"; // ✅ Use centralized axios
 
-const API = "http://localhost:5000/api";
+const BACKEND_URL = import.meta.env.VITE_API_URL;
 
 /* ================= TYPES ================= */
 interface Stat {
@@ -69,7 +69,7 @@ const iconMap: any = {
   Response: Clock,
 };
 
-/* ================= SERVICE CARD COMPONENT ================= */
+/* ================= SERVICE CARD ================= */
 const ServiceCard = ({ service }: { service: ServicePreview }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -83,27 +83,21 @@ const ServiceCard = ({ service }: { service: ServicePreview }) => {
     return () => clearInterval(interval);
   }, [service.images]);
 
+  const imageUrl =
+    service.images && service.images.length > 0
+      ? `${BACKEND_URL}/uploads/${service.images[currentIndex]}`
+      : "https://via.placeholder.com/400x300";
+
   return (
     <div className="premium-card rounded-xl overflow-hidden shadow-md">
-
-      {/* IMAGE */}
       <div className="w-full h-60 relative">
-        {service.images && service.images.length > 0 ? (
-          <img
-            src={`http://localhost:5000/uploads/${service.images[currentIndex]}`}
-            alt={service.title}
-            className="w-full h-full object-cover transition-all duration-500"
-          />
-        ) : (
-          <img
-            src="https://via.placeholder.com/400x300"
-            alt="placeholder"
-            className="w-full h-full object-cover"
-          />
-        )}
+        <img
+          src={imageUrl}
+          alt={service.title}
+          className="w-full h-full object-cover transition-all duration-500"
+        />
       </div>
 
-      {/* CONTENT */}
       <div className="p-6">
         <h3 className="text-lg font-bold mb-2">{service.title}</h3>
         <p className="text-sm text-muted-foreground mb-4 whitespace-pre-line leading-relaxed">
@@ -125,17 +119,18 @@ const Index = () => {
   const [home, setHome] = useState<HomeData>(defaultHome);
 
   useEffect(() => {
-    axios
-      .get(`${API}/home`)
+    API.get("/home")
       .then((res) => {
-        if (res.data) {
-          setHome(res.data);
-        }
+        if (res.data) setHome(res.data);
       })
       .catch(() => {
         console.log("Using default content");
       });
   }, []);
+
+  const aboutImageUrl = home.aboutImage
+    ? `${BACKEND_URL}/uploads/${home.aboutImage}`
+    : "https://via.placeholder.com/600x400";
 
   return (
     <div className="min-h-screen bg-background">
@@ -204,11 +199,7 @@ const Index = () => {
         <div className="container-premium grid lg:grid-cols-2 gap-12 items-center">
           <div className="aspect-[4/3] rounded-2xl overflow-hidden shadow-xl">
             <img
-              src={
-                home.aboutImage
-                  ? `http://localhost:5000/uploads/${home.aboutImage}`
-                  : "https://via.placeholder.com/600x400"
-              }
+              src={aboutImageUrl}
               alt="About"
               className="w-full h-full object-cover"
             />

@@ -1,12 +1,10 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { Save, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import AdminLayout from "../pages/AdminDashboard";
-
-const API = "http://localhost:5000/api";
+import API from "../api";
 
 interface Stat {
   value: string;
@@ -16,7 +14,7 @@ interface Stat {
 interface Service {
   title: string;
   description: string;
-  images: string[]; // existing images from DB
+  images: string[];
 }
 
 interface HomeData {
@@ -53,21 +51,33 @@ const AdminHome = () => {
   });
 
   const [aboutFile, setAboutFile] = useState<File | null>(null);
-
-  // NEW FILES PER SERVICE
   const [serviceFiles, setServiceFiles] = useState<File[][]>([]);
+  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  const BASE_URL =
+    import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
   /* ================= FETCH ================= */
   useEffect(() => {
-    axios.get(`${API}/home`).then((res) => {
-      if (res.data) {
-        setData(res.data);
+    const fetchData = async () => {
+      try {
+        const res = await API.get("/home");
 
-        // initialize empty arrays per service
-        const initialFiles = res.data.services.map(() => []);
-        setServiceFiles(initialFiles);
+        if (res.data) {
+          setData(res.data);
+
+          const initialFiles = res.data.services.map(() => []);
+          setServiceFiles(initialFiles);
+        }
+      } catch (error) {
+        console.error("Failed to fetch home data", error);
+      } finally {
+        setLoading(false);
       }
-    });
+    };
+
+    fetchData();
   }, []);
 
   /* ================= SAVE ================= */
@@ -78,9 +88,11 @@ const AdminHome = () => {
         return;
       }
 
+      setSaving(true);
+
       const formData = new FormData();
 
-      // Basic
+      // Basic fields
       formData.append("heroBadge", data.heroBadge);
       formData.append("heroTitle", data.heroTitle);
       formData.append("heroSubtitle", data.heroSubtitle);
@@ -99,22 +111,22 @@ const AdminHome = () => {
         formData.append("aboutImage", aboutFile);
       }
 
-      // Append service images properly
-     serviceFiles.forEach((serviceFileArray, serviceIndex) => {
-  serviceFileArray.forEach((file) => {
-    formData.append(`serviceImages_${serviceIndex}`, file);
-  });
-});
+      serviceFiles.forEach((serviceFileArray, serviceIndex) => {
+        serviceFileArray.forEach((file) => {
+          formData.append(`serviceImages_${serviceIndex}`, file);
+        });
+      });
 
-
-      await axios.put(`${API}/home`, formData, {
+      await API.put("/home", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      alert("Home Updated Successfully");
+      alert("Home Updated Successfully ✅");
     } catch (error) {
       console.error(error);
-      alert("Error updating home");
+      alert("Error updating home ❌");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -122,7 +134,10 @@ const AdminHome = () => {
   const addService = () => {
     setData({
       ...data,
-      services: [...data.services, { title: "", description: "", images: [] }],
+      services: [
+        ...data.services,
+        { title: "", description: "", images: [] },
+      ],
     });
 
     setServiceFiles([...serviceFiles, []]);
@@ -137,17 +152,30 @@ const AdminHome = () => {
     setServiceFiles(updatedFiles);
   };
 
+  if (loading) {
+    return (
+      <div className="flex min-h-screen">
+        <AdminLayout />
+        <div className="flex-1 flex items-center justify-center">
+          Loading...
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen">
       <AdminLayout />
+
       <div className="flex-1 p-8 bg-gray-100">
         <div className="max-w-6xl mx-auto space-y-10">
 
           {/* HEADER */}
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold">Home Page CMS</h1>
-            <Button onClick={saveData}>
-              <Save className="w-4 h-4 mr-2" /> Save Changes
+            <Button onClick={saveData} disabled={saving}>
+              <Save className="w-4 h-4 mr-2" />
+              {saving ? "Saving..." : "Save Changes"}
             </Button>
           </div>
 
@@ -220,7 +248,7 @@ const AdminHome = () => {
                 src={
                   aboutFile
                     ? URL.createObjectURL(aboutFile)
-                    : `http://localhost:5000/uploads/${data.aboutImage}`
+                    : `${BASE_URL}/uploads/${data.aboutImage}`
                 }
                 className="w-60 rounded mt-3"
               />
@@ -259,7 +287,6 @@ const AdminHome = () => {
                   }}
                 />
 
-                {/* IMAGE UPLOAD */}
                 <input
                   type="file"
                   multiple
@@ -283,14 +310,12 @@ const AdminHome = () => {
                   }}
                 />
 
-                {/* IMAGE PREVIEW */}
                 <div className="flex flex-wrap gap-3">
 
-                  {/* Existing images */}
                   {service.images?.map((img, i) => (
                     <div key={`existing-${i}`} className="relative">
                       <img
-                        src={`http://localhost:5000/uploads/${img}`}
+                        src={`${BASE_URL}/uploads/${img}`}
                         className="w-32 h-20 object-cover rounded"
                       />
                       <button
@@ -310,7 +335,6 @@ const AdminHome = () => {
                     </div>
                   ))}
 
-                  {/* New images */}
                   {serviceFiles[index]?.map((file, i) => (
                     <div key={`new-${i}`} className="relative">
                       <img

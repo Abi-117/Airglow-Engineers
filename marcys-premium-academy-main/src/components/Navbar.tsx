@@ -59,7 +59,7 @@ const Navbar = () => {
             <motion.img
               src={logo}
               alt="Airglow Engineers"
-              className="h-10 md:h-14 w-auto object-contain"
+              className="h-20 md:h-20 w-auto object-contain"
               whileHover={{ scale: 1.03 }}
               transition={{ duration: 0.3 }}
             />

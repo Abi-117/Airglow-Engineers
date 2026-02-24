@@ -8,7 +8,8 @@ import ContactForm from "@/components/ContactForm";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import axios from "axios";
 
-const API = "http://localhost:5000/api";
+// ✅ Use Render environment variable
+const API = import.meta.env.VITE_API_URL + "/api";
 
 interface ContactInfo {
   companyName: string;
@@ -31,7 +32,7 @@ const Contact: React.FC = () => {
   const fetchContact = async () => {
     try {
       const res = await axios.get<ContactInfo>(`${API}/contact`);
-      setContact(res.data);
+      setContact(res.data || null);
     } catch (err) {
       console.error("Failed to fetch contact info", err);
     } finally {
@@ -39,14 +40,18 @@ const Contact: React.FC = () => {
     }
   };
 
-  if (loading) return <div className="p-10 text-center">Loading...</div>;
-  if (!contact) return <div className="p-10 text-center">No contact data found</div>;
+  if (loading)
+    return <div className="p-10 text-center">Loading...</div>;
+
+  if (!contact)
+    return <div className="p-10 text-center">No contact data found</div>;
 
   const whatsappLink =
-    "https://wa.me/" +
-    contact.whatsappNumber +
-    "?text=" +
-    encodeURIComponent("Hello! I need home appliance service.");
+    contact.whatsappNumber
+      ? `https://wa.me/${contact.whatsappNumber}?text=${encodeURIComponent(
+          "Hello! I need home appliance service."
+        )}`
+      : "#";
 
   return (
     <div className="min-h-screen bg-background">
@@ -90,7 +95,6 @@ const Contact: React.FC = () => {
               viewport={{ once: true }}
               className="space-y-6"
             >
-              {/* Company Info */}
               <div>
                 <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-2">
                   {contact.companyName}
@@ -100,9 +104,7 @@ const Contact: React.FC = () => {
                 </p>
               </div>
 
-              {/* Phone Cards */}
               <div className="space-y-3">
-
                 <a
                   href={`tel:${contact.mainPhone}`}
                   className="premium-card rounded-xl p-4 flex items-center gap-4 group block"
@@ -117,21 +119,6 @@ const Contact: React.FC = () => {
                     </div>
                   </div>
                 </a>
-
-                {/* <a
-                  href={`tel:${contact.alternatePhone}`}
-                  className="premium-card rounded-xl p-4 flex items-center gap-4 group block"
-                >
-                  <Phone className="w-5 h-5 text-brand-red" />
-                  <div>
-                    <div className="text-xs text-muted-foreground">
-                      Alternate Number
-                    </div>
-                    <div className="font-medium text-foreground text-sm">
-                      {contact.alternatePhone}
-                    </div>
-                  </div>
-                </a> */}
 
                 <div className="premium-card rounded-xl p-4 flex items-center gap-4">
                   <MapPin className="w-5 h-5 text-brand-blue" />
@@ -158,15 +145,17 @@ const Contact: React.FC = () => {
                 </div>
               </div>
 
-              {/* WhatsApp */}
-              <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
+              <a
+                href={whatsappLink}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <Button variant="whatsapp" size="xl" className="w-full mt-4">
                   <MessageCircle className="w-5 h-5" />
                   Chat on WhatsApp
                 </Button>
               </a>
 
-              {/* Map */}
               <div className="mt-4 aspect-video rounded-xl overflow-hidden border border-border shadow-md">
                 <iframe
                   src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d248849.84916296526!2d80.0441462!3d13.0827!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a5265ea4f7d3361%3A0x6e61a70b6863d433!2sChennai%2C%20Tamil%20Nadu!5e0!3m2!1sen!2sin!4v1706000000000!5m2!1sen!2sin"

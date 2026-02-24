@@ -1,9 +1,7 @@
 import { useEffect, useState, ChangeEvent, FormEvent } from "react";
-import axios from "axios";
 import { Button } from "@/components/ui/button";
 import AdminLayout from "../pages/AdminDashboard";
-
-const API = "http://localhost:5000/api";
+import API from "../api";
 
 interface ContactInfo {
   companyName: string;
@@ -27,6 +25,7 @@ const AdminContactInfo: React.FC = () => {
   });
 
   const [loading, setLoading] = useState<boolean>(true);
+  const [saving, setSaving] = useState<boolean>(false);
 
   useEffect(() => {
     fetchData();
@@ -34,9 +33,9 @@ const AdminContactInfo: React.FC = () => {
 
   const fetchData = async (): Promise<void> => {
     try {
-      const res = await axios.get<ContactInfo>(`${API}/contact`);
+      const res = await API.get<ContactInfo>("/contact");
 
-      if (res.data && Object.keys(res.data).length > 0) {
+      if (res.data) {
         setForm({
           companyName: res.data.companyName || "",
           tagline: res.data.tagline || "",
@@ -63,12 +62,16 @@ const AdminContactInfo: React.FC = () => {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
+    setSaving(true);
+
     try {
-      await axios.post(`${API}/contact`, form);
+      await API.post("/contact", form);
       alert("Updated Successfully ✅");
     } catch (error) {
       console.error("Failed to update contact info", error);
       alert("Update failed ❌");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -92,67 +95,20 @@ const AdminContactInfo: React.FC = () => {
           <h2 className="text-2xl font-bold mb-6">Update Contact Info</h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {Object.keys(form).map((key) => (
+              <input
+                key={key}
+                name={key}
+                value={form[key as keyof ContactInfo]}
+                onChange={handleChange}
+                placeholder={key}
+                className="w-full border px-3 py-2 rounded-lg"
+              />
+            ))}
 
-            <input
-              name="companyName"
-              value={form.companyName}
-              onChange={handleChange}
-              placeholder="Company Name"
-              className="w-full border px-3 py-2 rounded-lg"
-            />
-
-            <input
-              name="tagline"
-              value={form.tagline}
-              onChange={handleChange}
-              placeholder="Tagline"
-              className="w-full border px-3 py-2 rounded-lg"
-            />
-
-            <input
-              name="mainPhone"
-              value={form.mainPhone}
-              onChange={handleChange}
-              placeholder="Main Phone"
-              className="w-full border px-3 py-2 rounded-lg"
-            />
-
-            <input
-              name="alternatePhone"
-              value={form.alternatePhone}
-              onChange={handleChange}
-              placeholder="Alternate Phone"
-              className="w-full border px-3 py-2 rounded-lg"
-            />
-
-            <input
-              name="location"
-              value={form.location}
-              onChange={handleChange}
-              placeholder="Location"
-              className="w-full border px-3 py-2 rounded-lg"
-            />
-
-            <input
-              name="workingHours"
-              value={form.workingHours}
-              onChange={handleChange}
-              placeholder="Working Hours"
-              className="w-full border px-3 py-2 rounded-lg"
-            />
-
-            <input
-              name="whatsappNumber"
-              value={form.whatsappNumber}
-              onChange={handleChange}
-              placeholder="WhatsApp Number"
-              className="w-full border px-3 py-2 rounded-lg"
-            />
-
-            <Button type="submit" className="w-full">
-              Save Changes
+            <Button type="submit" className="w-full" disabled={saving}>
+              {saving ? "Saving..." : "Save Changes"}
             </Button>
-
           </form>
         </div>
       </div>
