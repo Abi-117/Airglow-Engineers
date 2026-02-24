@@ -9,7 +9,7 @@ import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import axios from "axios";
 
 // ✅ Use Render environment variable
-const API = import.meta.env.VITE_API_URL + "/api";
+const API = import.meta.env.VITE_API_URL;
 
 interface ContactInfo {
   companyName: string;
