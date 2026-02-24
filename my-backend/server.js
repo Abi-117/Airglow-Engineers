@@ -13,10 +13,14 @@ import homeRoutes from "./routes/homeRoutes.js";
 dotenv.config();
 const app = express();
 
+// Body parser
 app.use(express.json());
-app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
-// ✅ ADD THIS
+// ✅ Persistent Upload Path for Render
+const uploadPath = process.env.UPLOAD_PATH || path.join(process.cwd(), "uploads");
+app.use("/uploads", express.static(uploadPath));
+
+// Simple test route
 app.get("/", (req, res) => {
   res.send("Airglow Engineers API is running 🚀");
 });
@@ -32,15 +36,17 @@ app.use(cors({
   credentials: true
 }));
 
+// MongoDB connection
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB connected"))
   .catch(err => console.error("MongoDB connection error:", err));
 
+// Routes
 app.use("/api/home", homeRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/about", aboutRoutes);
 app.use("/api/services", serviceRoutes);
-app.use("/api/location",locationRoutes);
+app.use("/api/location", locationRoutes);
 app.use("/api/contact", contactInfoRoutes);
 
 const PORT = process.env.PORT || 5000;
