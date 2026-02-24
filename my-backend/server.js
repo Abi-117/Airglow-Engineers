@@ -23,7 +23,10 @@ app.get("/", (req, res) => {
 
 // CORS
 app.use(cors({
-  origin: "http://localhost:8080",
+  origin: [
+    "http://localhost:8080",
+    "https://airglow-engineers-1.onrender.com"
+  ],
   methods: ["GET","POST","PUT","DELETE","OPTIONS"],
   allowedHeaders: ["Content-Type","Authorization"],
   credentials: true
