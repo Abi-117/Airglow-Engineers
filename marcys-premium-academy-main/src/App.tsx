@@ -31,30 +31,25 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/services" element={<Services />} />
-          <Route path="/location" element={<Location />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/privacy" element={<Privacy />} />
+  <Route path="/" element={<Index />} />
+  <Route path="/about" element={<About />} />
+  <Route path="/services" element={<Services />} />
+  <Route path="/location" element={<Location />} />
+  <Route path="/contact" element={<Contact />} />
+  <Route path="/privacy" element={<Privacy />} />
 
-         <Route path="/admin/setup" element={<SetupAdmin />} />   {/* Only first-time setup */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="*" element={<Login />} />
-        <Route path="/admin/about" element={<AdminAboutCMS />} />
-        <Route  path="/admin/services" element={<AdminServicesCMS />}></Route>
-        <Route path="/admin/location" element={<AdminLocationCMS />}></Route>
-        <Route path="/admin/contact" element={<AdminContactInfo />}></Route>
-       <Route path="/admin/home" element={<AdminHome />}></Route>
-        
-        
+  <Route path="/admin/setup" element={<SetupAdmin />} />
+  <Route path="/login" element={<Login />} />
+  <Route path="/admin/dashboard" element={<AdminDashboard />} />
+  <Route path="/admin/about" element={<AdminAboutCMS />} />
+  <Route path="/admin/services" element={<AdminServicesCMS />} />
+  <Route path="/admin/location" element={<AdminLocationCMS />} />
+  <Route path="/admin/contact" element={<AdminContactInfo />} />
+  <Route path="/admin/home" element={<AdminHome />} />
 
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-
-
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+  {/* Always keep this last */}
+  <Route path="*" element={<NotFound />} />
+</Routes>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
