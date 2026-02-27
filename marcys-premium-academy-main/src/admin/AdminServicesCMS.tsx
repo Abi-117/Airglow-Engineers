@@ -12,8 +12,8 @@ interface ServiceItem {
 }
 
 // Cloudinary config
-const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/YOUR_CLOUD_NAME/image/upload";
-const UPLOAD_PRESET = "YOUR_UPLOAD_PRESET";
+const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/djpo4gjdy/image/upload";
+const UPLOAD_PRESET = "Airglow";
 
 const AdminServicesCMS: React.FC = () => {
   const token = localStorage.getItem("adminToken");
