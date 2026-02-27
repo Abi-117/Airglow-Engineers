@@ -1,19 +1,22 @@
 import express from "express";
+import upload from "../utils/cloudinary.js";
 import { getHome, updateHome } from "../controllers/homeController.js";
-import upload from "../middleware/upload.js";
+import Home from "../models/Home.js"; // ✅ Import the model
 
 const router = express.Router();
 
 router.get("/", getHome);
-router.put(
-  "/",
-  upload.fields([
-    { name: "aboutImage", maxCount: 1 },
-    { name: "serviceImages_0" }, // multer can handle multiple fields
-    { name: "serviceImages_1" },
-    { name: "serviceImages_2" },
-  ]),
-  updateHome
-);
+
+router.post("/", async (req, res) => {
+  try {
+    const newHome = await Home.create(req.body);
+    res.status(201).json(newHome);
+  } catch (err) {
+    console.error("POST /api/home error:", err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
+router.put("/", upload.any(), updateHome);
 
 export default router;

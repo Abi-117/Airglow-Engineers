@@ -1,91 +1,44 @@
 import Home from "../models/Home.js";
-import { v2 as cloudinary } from "cloudinary";
-import fs from "fs";
 
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
-export const getHome = async (req, res) => {
-  try {
+export const getHome = async (req,res)=>{
+  try{
     const home = await Home.findOne();
     res.json(home);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  }catch(err){
+    res.status(500).json({message:err.message});
   }
 };
 
-export const updateHome = async (req, res) => {
-  try {
+export const updateHome = async (req,res)=>{
+  try{
+    let home = await Home.findOne();
+    if(!home) home = new Home({});
+
     const {
-      heroBadge,
-      heroTitle,
-      heroSubtitle,
-      heroDescription,
-      phoneNumber,
-      whatsappNumber,
-      aboutTitle,
-      aboutDescription,
-      mapEmbed,
-      stats,
-      aboutPoints,
-      services,
+      heroBadge, heroTitle, heroSubtitle, heroDescription,
+      whatsappNumber, phoneNumber, stats, aboutTitle, aboutDescription,
+      aboutPoints, aboutImage, services, mapEmbed
     } = req.body;
 
-    let parsedServices = JSON.parse(services);
+    home.heroBadge = heroBadge ?? home.heroBadge;
+    home.heroTitle = heroTitle ?? home.heroTitle;
+    home.heroSubtitle = heroSubtitle ?? home.heroSubtitle;
+    home.heroDescription = heroDescription ?? home.heroDescription;
+    home.whatsappNumber = whatsappNumber ?? home.whatsappNumber;
+    home.phoneNumber = phoneNumber ?? home.phoneNumber;
+    home.aboutTitle = aboutTitle ?? home.aboutTitle;
+    home.aboutDescription = aboutDescription ?? home.aboutDescription;
+    home.aboutImage = aboutImage ?? home.aboutImage;
+    home.mapEmbed = mapEmbed ?? home.mapEmbed;
 
-    // Handle uploaded files via Cloudinary
-    if (req.files && req.files.length > 0) {
-      for (const file of req.files) {
-        // Upload to Cloudinary
-        const result = await cloudinary.uploader.upload(file.path, {
-          folder: "airglow",
-        });
+    home.stats = Array.isArray(stats) ? stats : home.stats;
+    home.aboutPoints = Array.isArray(aboutPoints) ? aboutPoints : home.aboutPoints;
+    home.services = Array.isArray(services) ? services : home.services;
 
-        // Remove local file after upload
-        fs.unlinkSync(file.path);
-
-        // About Image
-        if (file.fieldname === "aboutImage") {
-          req.body.aboutImage = result.secure_url;
-        }
-
-        // Service Images
-        const match = file.fieldname.match(/serviceImages_(\d+)/);
-        if (match) {
-          const serviceIndex = parseInt(match[1]);
-          if (!parsedServices[serviceIndex].images) {
-            parsedServices[serviceIndex].images = [];
-          }
-          parsedServices[serviceIndex].images.push(result.secure_url);
-        }
-      }
-    }
-
-    const updatedData = {
-      heroBadge,
-      heroTitle,
-      heroSubtitle,
-      heroDescription,
-      phoneNumber,
-      whatsappNumber,
-      aboutTitle,
-      aboutDescription,
-      mapEmbed,
-      stats: JSON.parse(stats),
-      aboutPoints: JSON.parse(aboutPoints),
-      services: parsedServices,
-      aboutImage: req.body.aboutImage,
-    };
-
-    await Home.findOneAndUpdate({}, updatedData, { upsert: true });
-
-    res.json({ message: "Home updated successfully" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Update failed" });
+    await home.save();
+    res.json({message:"Home updated successfully ✅", home});
+  }catch(err){
+    console.error(err);
+    res.status(500).json({message:err.message});
   }
 };

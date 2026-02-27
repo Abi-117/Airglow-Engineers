@@ -29,7 +29,9 @@ app.get("/", (req, res) => {
 app.use(cors({
   origin: [
     "http://localhost:8080",
-    "https://airglow-engineers-1.onrender.com"
+    "https://airglow-engineers-1.onrender.com",
+    "https://thebrandservice.in",
+    "https://www.thebrandservice.in"
   ],
   methods: ["GET","POST","PUT","DELETE","OPTIONS"],
   allowedHeaders: ["Content-Type","Authorization"],
