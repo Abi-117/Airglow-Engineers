@@ -1,28 +1,9 @@
 import express from "express";
-import multer from "multer";
-import fs from "fs";
 import { Service } from "../models/Service.js";
 
 const router = express.Router();
 
-/* ---------------- MULTER SETUP ---------------- */
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    if (!fs.existsSync("uploads")) {
-      fs.mkdirSync("uploads");
-    }
-    cb(null, "uploads/");
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + "-" + file.originalname);
-  },
-});
-
-const upload = multer({ storage });
-
 /* ---------------- GET SERVICES ---------------- */
-
 router.get("/", async (req, res) => {
   try {
     const services = await Service.find().sort({ createdAt: -1 });
@@ -33,23 +14,20 @@ router.get("/", async (req, res) => {
 });
 
 /* ---------------- ADD SERVICE ---------------- */
-
-router.post("/add", upload.array("images", 10), async (req, res) => {
+router.post("/add", async (req, res) => {
   try {
-    const { title, description, type } = req.body;
+    const { title, description, type, images } = req.body;
 
-    if (!title || !description || !type)
+    if (!title || !description || !type) {
       return res.status(400).json({ error: "Missing fields" });
+    }
 
-    const imagePaths = req.files?.map(
-      (file) => `/uploads/${file.filename}`
-    ) || [];
-
+    // images should be an array of Cloudinary URLs
     const service = new Service({
       title,
       description,
       type,
-      images: imagePaths,
+      images: Array.isArray(images) ? images : [],
     });
 
     await service.save();
@@ -61,10 +39,9 @@ router.post("/add", upload.array("images", 10), async (req, res) => {
 });
 
 /* ---------------- UPDATE SERVICE ---------------- */
-
-router.post("/edit/:id", upload.array("images", 10), async (req, res) => {
+router.post("/edit/:id", async (req, res) => {
   try {
-    const { title, description, type } = req.body;
+    const { title, description, type, images } = req.body;
 
     const updateData = {
       title,
@@ -72,17 +49,11 @@ router.post("/edit/:id", upload.array("images", 10), async (req, res) => {
       type,
     };
 
-    if (req.files && req.files.length > 0) {
-      updateData.images = req.files.map(
-        (file) => `/uploads/${file.filename}`
-      );
+    if (images && Array.isArray(images)) {
+      updateData.images = images; // overwrite with new Cloudinary URLs
     }
 
-    const service = await Service.findByIdAndUpdate(
-      req.params.id,
-      updateData,
-      { new: true }
-    );
+    const service = await Service.findByIdAndUpdate(req.params.id, updateData, { new: true });
 
     res.json({ message: "Service updated", service });
   } catch (err) {
@@ -91,22 +62,9 @@ router.post("/edit/:id", upload.array("images", 10), async (req, res) => {
 });
 
 /* ---------------- DELETE SERVICE ---------------- */
-
 router.delete("/:id", async (req, res) => {
   try {
-    const service = await Service.findById(req.params.id);
-
-    if (service?.images?.length) {
-      service.images.forEach((img) => {
-        const filePath = "." + img;
-        if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath);
-        }
-      });
-    }
-
     await Service.findByIdAndDelete(req.params.id);
-
     res.json({ message: "Service deleted" });
   } catch (err) {
     res.status(500).json({ error: err.message });

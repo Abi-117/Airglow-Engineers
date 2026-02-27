@@ -8,8 +8,12 @@ interface ServiceItem {
   title: string;
   description: string;
   type: "main" | "advanced";
-  images?: string[]; // ✅ multiple images
+  images?: string[]; // URLs stored in DB
 }
+
+// Cloudinary config
+const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/YOUR_CLOUD_NAME/image/upload";
+const UPLOAD_PRESET = "YOUR_UPLOAD_PRESET";
 
 const AdminServicesCMS: React.FC = () => {
   const token = localStorage.getItem("adminToken");
@@ -18,16 +22,14 @@ const AdminServicesCMS: React.FC = () => {
   const [services, setServices] = useState<ServiceItem[]>([]);
   const [loading, setLoading] = useState(false);
 
-  /** Form Fields */
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [type, setType] = useState<"main" | "advanced">("main");
   const [images, setImages] = useState<File[]>([]);
-
-  /** Edit */
   const [editId, setEditId] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<number[]>([]);
 
-  /** Fetch services */
+  // ---------------- Fetch Services ----------------
   const fetchServices = async () => {
     setLoading(true);
     try {
@@ -47,49 +49,84 @@ const AdminServicesCMS: React.FC = () => {
     fetchServices();
   }, []);
 
-  /** Logout */
+  // ---------------- Logout ----------------
   const logout = () => {
     localStorage.removeItem("adminToken");
     navigate("/login");
   };
 
-  /** Add / Update */
+  // ---------------- Upload to Cloudinary ----------------
+  const uploadToCloudinary = (file: File, idx: number): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", UPLOAD_PRESET);
+
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", CLOUDINARY_URL);
+
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          setUploadProgress((prev) => {
+            const copy = [...prev];
+            copy[idx] = Math.round((e.loaded / e.total) * 100);
+            return copy;
+          });
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status === 200) {
+          const res = JSON.parse(xhr.responseText);
+          resolve(res.secure_url);
+        } else {
+          reject(xhr.statusText);
+        }
+      };
+
+      xhr.onerror = () => reject("Upload failed");
+      xhr.send(formData);
+    });
+  };
+
+  // ---------------- Add / Update Service ----------------
   const saveService = async () => {
     if (!title || !description) return alert("Fill all fields");
 
-    const formData = new FormData();
-    formData.append("title", title);
-    formData.append("description", description);
-    formData.append("type", type);
-
-    images.forEach((img) => {
-      formData.append("images", img); // ✅ multiple
-    });
-
     try {
+      let uploadedUrls: string[] = [];
+
+      if (images.length) {
+        setUploadProgress(Array(images.length).fill(0));
+        uploadedUrls = await Promise.all(images.map(uploadToCloudinary));
+      }
+
+      const payload = {
+        title,
+        description,
+        type,
+        images: uploadedUrls,
+      };
+
       if (editId) {
-        await API.post(`/services/edit/${editId}`, formData, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
+        await API.post(`/services/edit/${editId}`, payload, {
+          headers: { Authorization: `Bearer ${token}` },
         });
         alert("Service updated!");
       } else {
-        await API.post("/services/add", formData, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
+        await API.post("/services/add", payload, {
+          headers: { Authorization: `Bearer ${token}` },
         });
         alert("Service added!");
       }
 
+      // Reset form
       setTitle("");
       setDescription("");
       setType("main");
       setImages([]);
       setEditId(null);
+      setUploadProgress([]);
       fetchServices();
     } catch (err) {
       console.error(err);
@@ -97,7 +134,7 @@ const AdminServicesCMS: React.FC = () => {
     }
   };
 
-  /** Delete */
+  // ---------------- Delete ----------------
   const deleteService = async (id: string) => {
     if (!confirm("Are you sure?")) return;
     try {
@@ -111,7 +148,7 @@ const AdminServicesCMS: React.FC = () => {
     }
   };
 
-  /** Edit */
+  // ---------------- Edit ----------------
   const editService = (s: ServiceItem) => {
     setTitle(s.title);
     setDescription(s.description);
@@ -127,124 +164,51 @@ const AdminServicesCMS: React.FC = () => {
       <div className="p-6 flex-1 bg-gray-100">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Admin Services CMS</h1>
-          <button
-            onClick={logout}
-            className="px-4 py-2 bg-red-500 text-white rounded"
-          >
-            Logout
-          </button>
+          <button onClick={logout} className="px-4 py-2 bg-red-500 text-white rounded">Logout</button>
         </div>
 
         {/* ---------------- FORM ---------------- */}
         <section className="mb-8 bg-white p-4 rounded shadow">
-          <h2 className="font-bold mb-3 text-lg">
-            {editId ? "Edit Service" : "Add Service"}
-          </h2>
+          <h2 className="font-bold mb-3 text-lg">{editId ? "Edit Service" : "Add Service"}</h2>
 
-          <input
-            className="w-full mb-3 p-2 border rounded"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Title"
-          />
-
-          <textarea
-            className="w-full mb-3 p-2 border rounded"
-            rows={4}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Description"
-          />
-
-          <select
-            className="w-full mb-3 p-2 border rounded"
-            value={type}
-            onChange={(e) =>
-              setType(e.target.value as "main" | "advanced")
-            }
-          >
+          <input className="w-full mb-3 p-2 border rounded" value={title} onChange={e => setTitle(e.target.value)} placeholder="Title" />
+          <textarea className="w-full mb-3 p-2 border rounded" rows={4} value={description} onChange={e => setDescription(e.target.value)} placeholder="Description" />
+          <select className="w-full mb-3 p-2 border rounded" value={type} onChange={e => setType(e.target.value as "main" | "advanced")}>
             <option value="main">Main Service</option>
             <option value="advanced">Advanced Service</option>
           </select>
 
-          {/* MULTIPLE IMAGE UPLOAD */}
-          <input
-            type="file"
-            multiple
-            onChange={(e) =>
-              e.target.files &&
-              setImages(Array.from(e.target.files))
-            }
-            className="mb-3"
-          />
+          <input type="file" multiple onChange={e => e.target.files && setImages(Array.from(e.target.files))} className="mb-3" />
 
-          {/* Preview Selected Images */}
-          {images.length > 0 && (
-            <div className="flex gap-3 mb-3 flex-wrap">
-              {images.map((img, index) => (
-                <img
-                  key={index}
-                  src={URL.createObjectURL(img)}
-                  alt="preview"
-                  className="w-20 h-20 object-cover rounded"
-                />
-              ))}
+          {/* Preview + Progress */}
+          {images.map((img, idx) => (
+            <div key={idx} className="flex flex-col mb-2">
+              <img src={URL.createObjectURL(img)} alt="preview" className="w-20 h-20 object-cover rounded" />
+              {uploadProgress[idx] !== undefined && <progress value={uploadProgress[idx]} max={100} />}
             </div>
-          )}
+          ))}
 
-          <button
-            onClick={saveService}
-            className="px-4 py-2 bg-blue-500 text-white rounded"
-          >
-            {editId ? "Update" : "Add"}
-          </button>
+          <button onClick={saveService} className="px-4 py-2 bg-blue-500 text-white rounded">{editId ? "Update" : "Add"}</button>
         </section>
 
         {/* ---------------- LIST ---------------- */}
         <section className="bg-white p-4 rounded shadow">
-          <h2 className="font-bold mb-4 text-lg">
-            All Services
-          </h2>
-
+          <h2 className="font-bold mb-4 text-lg">All Services</h2>
           <div className="space-y-5">
-            {services.map((s) => (
-              <div
-                key={s._id}
-                className="border-b pb-4"
-              >
+            {services.map(s => (
+              <div key={s._id} className="border-b pb-4">
                 <div className="flex flex-wrap gap-3 items-center">
                   {s.images?.map((img, i) => (
-                    <img
-                      key={i}
-                      src={`http://localhost:5000${img}`}
-                      alt={s.title}
-                      className="w-20 h-20 object-cover rounded"
-                    />
+                    <img key={i} src={img} alt={s.title} className="w-20 h-20 object-cover rounded" />
                   ))}
                 </div>
-
                 <div className="mt-2">
-                  <h3 className="font-semibold">
-                    {s.title} ({s.type})
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    {s.description}
-                  </p>
+                  <h3 className="font-semibold">{s.title} ({s.type})</h3>
+                  <p className="text-sm text-gray-600">{s.description}</p>
                 </div>
-
                 <div className="flex gap-3 mt-2">
-                  <button
-                    onClick={() => editService(s)}
-                    className="px-3 py-1 bg-yellow-400 text-white rounded"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => deleteService(s._id)}
-                    className="px-3 py-1 bg-red-500 text-white rounded"
-                  >
-                    Delete
-                  </button>
+                  <button onClick={() => editService(s)} className="px-3 py-1 bg-yellow-400 text-white rounded">Edit</button>
+                  <button onClick={() => deleteService(s._id)} className="px-3 py-1 bg-red-500 text-white rounded">Delete</button>
                 </div>
               </div>
             ))}
